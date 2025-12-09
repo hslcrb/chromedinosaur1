@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>크롬 공룡 게임 - 픽셀 & 3D</title>
+    <title>크롬 공룡 게임 - 픽셀 & 3D 개선판</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
@@ -17,7 +17,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #ffffff;
             font-family: 'Courier New', monospace;
             overflow: hidden;
@@ -27,6 +27,9 @@
             position: relative;
             width: 800px;
             height: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
         }
 
         #gameCanvas {
@@ -37,7 +40,7 @@
             height: 100%;
             image-rendering: pixelated;
             image-rendering: crisp-edges;
-            border: 2px solid #333;
+            border: 3px solid #333;
             background: #f7f7f7;
         }
 
@@ -48,7 +51,7 @@
             width: 100%;
             height: 100%;
             display: none;
-            border: 2px solid #333;
+            border: 3px solid #333;
         }
 
         .ui-overlay {
@@ -59,7 +62,15 @@
             color: #000;
             font-size: 20px;
             font-weight: bold;
-            text-shadow: 2px 2px 0 #fff;
+            text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #000;
+        }
+
+        .ui-overlay div {
+            margin: 5px 0;
         }
 
         .controls {
@@ -69,11 +80,13 @@
             transform: translateX(-50%);
             z-index: 10;
             color: #000;
-            font-size: 14px;
+            font-size: 12px;
             text-align: center;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px;
-            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid #000;
+            font-weight: bold;
         }
 
         .mode-toggle {
@@ -81,54 +94,65 @@
             top: 10px;
             left: 10px;
             z-index: 10;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             color: white;
             border: 2px solid #fff;
             padding: 10px 20px;
             cursor: pointer;
             font-family: 'Courier New', monospace;
             font-size: 14px;
-            border-radius: 5px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
         }
 
         .mode-toggle:hover {
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            transform: scale(1.05);
         }
 
-        .game-over {
+        .game-over, .pause-screen {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 20;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             color: white;
-            padding: 30px;
-            border: 3px solid #fff;
+            padding: 40px;
+            border: 4px solid #fff;
             text-align: center;
             display: none;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
         }
 
-        .game-over h2 {
-            font-size: 32px;
+        .game-over h2, .pause-screen h2 {
+            font-size: 36px;
             margin-bottom: 20px;
             font-family: 'Courier New', monospace;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
 
-        .restart-btn {
+        .restart-btn, .resume-btn {
             background: #fff;
             color: #000;
-            border: 2px solid #000;
-            padding: 10px 20px;
+            border: 3px solid #000;
+            padding: 12px 30px;
             font-size: 18px;
             cursor: pointer;
             font-family: 'Courier New', monospace;
-            margin-top: 10px;
+            margin-top: 15px;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: all 0.3s;
         }
 
-        .restart-btn:hover {
+        .restart-btn:hover, .resume-btn:hover {
             background: #000;
             color: #fff;
+            transform: scale(1.1);
         }
 
         .start-screen {
@@ -137,56 +161,87 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 15;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             color: white;
-            padding: 30px;
-            border: 3px solid #fff;
+            padding: 40px;
+            border: 4px solid #fff;
             text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
         }
 
         .start-screen h1 {
-            font-size: 36px;
+            font-size: 42px;
             margin-bottom: 20px;
             font-family: 'Courier New', monospace;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
 
         .start-btn {
             background: #fff;
             color: #000;
-            border: 2px solid #000;
-            padding: 10px 20px;
+            border: 3px solid #000;
+            padding: 12px 30px;
             font-size: 18px;
             cursor: pointer;
             font-family: 'Courier New', monospace;
-            margin-top: 10px;
+            margin-top: 15px;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: all 0.3s;
         }
 
         .start-btn:hover {
             background: #000;
             color: #fff;
+            transform: scale(1.1);
+        }
+
+        .speed-indicator {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            color: #000;
+            font-size: 16px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 5px 15px;
+            border-radius: 8px;
+            border: 2px solid #000;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="game-wrapper">
+    <div class="game-wrapper" id="gameWrapper">
         <canvas id="gameCanvas"></canvas>
         <div id="game3D"></div>
         <button class="mode-toggle" id="modeToggle">3D 모드로 전환</button>
         <div class="ui-overlay">
             <div>HI: <span id="highScore">0</span></div>
             <div>점수: <span id="score">0</span></div>
+            <div>속도: <span id="speed">5</span></div>
         </div>
+        <div class="speed-indicator" id="speedIndicator">속도 증가!</div>
         <div class="controls">
-            스페이스바: 점프 | P: 일시정지
+            스페이스바: 점프 | P: 일시정지 | 화살표 위: 점프
         </div>
         <div class="start-screen" id="startScreen">
-            <h1>공룡 게임</h1>
+            <h1>🦖 공룡 게임 🦖</h1>
             <p>스페이스바를 눌러 시작하세요!</p>
             <button class="start-btn" onclick="startGame()">시작</button>
+        </div>
+        <div class="pause-screen" id="pauseScreen">
+            <h2>일시정지</h2>
+            <p>P 키를 눌러 계속하세요</p>
+            <button class="resume-btn" onclick="togglePause()">계속하기</button>
         </div>
         <div class="game-over" id="gameOver">
             <h2>게임 오버</h2>
             <p>점수: <span id="finalScore">0</span></p>
+            <p>최고 점수: <span id="finalHighScore">0</span></p>
             <button class="restart-btn" onclick="restartGame()">다시 시작</button>
         </div>
     </div>
@@ -202,6 +257,7 @@
         let score = 0;
         let highScore = 0;
         let speed = 5;
+        let baseSpeed = 5;
         let gravity = 0.8;
         let jumpPower = -15;
         let velocity = 0;
@@ -213,13 +269,18 @@
         let dinoHeight = 40;
         let obstacles = [];
         let clouds = [];
+        let particles = [];
         let animationId;
         let lastObstacleTime = 0;
         let obstacleInterval = 2000;
         let audioContext;
-        let bgmOscillator;
         let bgmGainNode;
         let bgmPlaying = false;
+        let bgmScheduleId = null;
+        let dinoFrame = 0;
+        let dinoAnimationSpeed = 0;
+        let screenShake = 0;
+        let lastSpeedLevel = 0;
 
         // 초기화
         function init() {
@@ -259,71 +320,92 @@
 
             bgmGainNode = audioContext.createGain();
             bgmGainNode.connect(audioContext.destination);
-            bgmGainNode.gain.value = 0.15; // 볼륨 조절
+            bgmGainNode.gain.value = 0.12;
 
-            // 8비트 스타일 멜로디 (크롬 공룡 게임 느낌)
             const melody = [
-                { freq: 523.25, duration: 0.2 }, // C5
-                { freq: 587.33, duration: 0.2 }, // D5
-                { freq: 659.25, duration: 0.2 }, // E5
-                { freq: 523.25, duration: 0.2 }, // C5
-                { freq: 392.00, duration: 0.3 }, // G4
-                { freq: 440.00, duration: 0.2 }, // A4
-                { freq: 493.88, duration: 0.2 }, // B4
-                { freq: 523.25, duration: 0.4 }, // C5
-                { freq: 0, duration: 0.1 }, // 쉼표
+                { freq: 523.25, duration: 0.2 },
+                { freq: 587.33, duration: 0.2 },
+                { freq: 659.25, duration: 0.2 },
+                { freq: 523.25, duration: 0.2 },
+                { freq: 392.00, duration: 0.3 },
+                { freq: 440.00, duration: 0.2 },
+                { freq: 493.88, duration: 0.2 },
+                { freq: 523.25, duration: 0.4 },
+                { freq: 0, duration: 0.1 },
             ];
 
             let noteIndex = 0;
-            let startTime = audioContext.currentTime;
+            let scheduleTime = audioContext.currentTime;
 
-            function scheduleNotes() {
+            function scheduleNextNote() {
                 if (!gameStarted || isGameOver || isPaused) {
                     bgmPlaying = false;
                     return;
                 }
 
-                const currentTime = audioContext.currentTime;
                 const note = melody[noteIndex];
-
                 if (note.freq > 0) {
                     const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
                     
-                    oscillator.type = 'square'; // 8비트 사운드
+                    oscillator.type = 'square';
                     oscillator.frequency.value = note.freq;
                     
-                    gainNode.gain.setValueAtTime(0, currentTime);
-                    gainNode.gain.linearRampToValueAtTime(0.15, currentTime + 0.01);
-                    gainNode.gain.linearRampToValueAtTime(0, currentTime + note.duration);
+                    gainNode.gain.setValueAtTime(0, scheduleTime);
+                    gainNode.gain.linearRampToValueAtTime(0.12, scheduleTime + 0.01);
+                    gainNode.gain.linearRampToValueAtTime(0, scheduleTime + note.duration);
                     
                     oscillator.connect(gainNode);
                     gainNode.connect(bgmGainNode);
                     
-                    oscillator.start(currentTime);
-                    oscillator.stop(currentTime + note.duration);
+                    oscillator.start(scheduleTime);
+                    oscillator.stop(scheduleTime + note.duration);
                 }
 
                 noteIndex = (noteIndex + 1) % melody.length;
-                startTime += note.duration;
+                scheduleTime += note.duration;
 
-                // 다음 노트 스케줄링
                 if (gameStarted && !isGameOver && !isPaused) {
-                    setTimeout(scheduleNotes, note.duration * 1000);
+                    bgmScheduleId = setTimeout(scheduleNextNote, note.duration * 1000);
                 } else {
                     bgmPlaying = false;
                 }
             }
 
             bgmPlaying = true;
-            scheduleNotes();
+            scheduleNextNote();
         }
 
         function stopBGM() {
+            if (bgmScheduleId) {
+                clearTimeout(bgmScheduleId);
+                bgmScheduleId = null;
+            }
             if (bgmGainNode) {
                 bgmGainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
             }
             bgmPlaying = false;
+        }
+
+        // 사운드 효과
+        function playSound(freq, duration, type = 'square', volume = 0.1) {
+            if (!audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = type;
+            oscillator.frequency.value = freq;
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + duration);
         }
 
         // 3D 초기화
@@ -331,40 +413,71 @@
             const container = document.getElementById('game3D');
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0xf7f7f7);
+            scene.fog = new THREE.Fog(0xf7f7f7, 10, 50);
 
             camera = new THREE.PerspectiveCamera(75, 800 / 400, 0.1, 1000);
             camera.position.set(0, 5, 10);
             camera.lookAt(0, 0, 0);
 
-            renderer = new THREE.WebGLRenderer({ antialias: false });
+            renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(800, 400);
+            renderer.shadowMap.enabled = true;
             container.appendChild(renderer.domElement);
 
             // 조명
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
             scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
             directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
             scene.add(directionalLight);
 
             // 바닥
-            const groundGeometry = new THREE.PlaneGeometry(100, 10);
-            const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x87ceeb });
+            const groundGeometry = new THREE.PlaneGeometry(200, 10);
+            const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x87ceeb });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.rotation.x = -Math.PI / 2;
             ground.position.y = -2;
+            ground.receiveShadow = true;
             scene.add(ground);
 
-            // 공룡 3D
-            const dinoGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-            const dinoMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
-            dino3D = new THREE.Mesh(dinoGeometry, dinoMaterial);
+            // 공룡 3D (더 상세하게)
+            const dinoGroup = new THREE.Group();
+            
+            // 몸체
+            const bodyGeometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.2;
+            body.castShadow = true;
+            dinoGroup.add(body);
+            
+            // 머리
+            const headGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+            const head = new THREE.Mesh(headGeometry, bodyMaterial);
+            head.position.set(0.2, 0.4, 0);
+            head.castShadow = true;
+            dinoGroup.add(head);
+            
+            // 눈
+            const eyeGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+            const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const eye1 = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            eye1.position.set(0.25, 0.45, 0.1);
+            dinoGroup.add(eye1);
+            const eye2 = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            eye2.position.set(0.25, 0.45, -0.1);
+            dinoGroup.add(eye2);
+            
+            dino3D = dinoGroup;
             dino3D.position.set(-3, -1.5, 0);
             scene.add(dino3D);
         }
 
         // 모드 전환
         function toggleMode() {
+            if (isPaused || isGameOver) return;
+            
             is3DMode = !is3DMode;
             const canvas = document.getElementById('gameCanvas');
             const container3D = document.getElementById('game3D');
@@ -374,7 +487,6 @@
                 canvas.style.display = 'none';
                 container3D.style.display = 'block';
                 toggleBtn.textContent = '2D 모드로 전환';
-                // 기존 장애물을 3D로 동기화
                 if (gameStarted) {
                     syncObstaclesTo3D();
                 }
@@ -387,7 +499,7 @@
 
         // 키 입력 처리
         function handleKeyDown(e) {
-            if (e.code === 'Space') {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
                 e.preventDefault();
                 if (!gameStarted) {
                     startGame();
@@ -398,16 +510,24 @@
                 }
             }
             if (e.code === 'KeyP' && gameStarted && !isGameOver) {
-                isPaused = !isPaused;
-                if (!isPaused) {
-                    if (audioContext && !bgmPlaying) {
-                        startBGM();
-                    }
-                    gameLoop();
-                } else {
-                    if (bgmPlaying) {
-                        stopBGM();
-                    }
+                togglePause();
+                e.preventDefault();
+            }
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            const pauseScreen = document.getElementById('pauseScreen');
+            pauseScreen.style.display = isPaused ? 'block' : 'none';
+            
+            if (!isPaused) {
+                if (audioContext && !bgmPlaying) {
+                    startBGM();
+                }
+                gameLoop();
+            } else {
+                if (bgmPlaying) {
+                    stopBGM();
                 }
             }
         }
@@ -418,19 +538,22 @@
             isGameOver = false;
             isPaused = false;
             score = 0;
-            speed = 5;
+            speed = baseSpeed;
             velocity = 0;
             isJumping = false;
             dinoY = groundY;
             obstacles = [];
             obstacles3D = [];
             clouds = [];
+            particles = [];
             lastObstacleTime = 0;
+            screenShake = 0;
+            lastSpeedLevel = 0;
 
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('pauseScreen').style.display = 'none';
 
-            // BGM 시작
             if (audioContext) {
                 if (audioContext.state === 'suspended') {
                     audioContext.resume();
@@ -448,7 +571,32 @@
             if (isJumping) return;
             isJumping = true;
             velocity = jumpPower;
+            playSound(400, 0.1, 'square', 0.15);
         }
+
+        // 파티클 생성
+        function createParticles(x, y, color = '#ff0000', count = 10) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 30,
+                    maxLife: 30,
+                    color: color,
+                    size: Math.random() * 3 + 2
+                });
+            }
+        }
+
+        // 장애물 타입
+        const OBSTACLE_TYPES = {
+            CACTUS_SMALL: 0,
+            CACTUS_LARGE: 1,
+            CACTUS_GROUP: 2,
+            BIRD: 3
+        };
 
         // 장애물 생성
         function createObstacle() {
@@ -456,20 +604,55 @@
             if (now - lastObstacleTime < obstacleInterval) return;
             lastObstacleTime = now;
 
+            let obstacleType;
+            const rand = Math.random();
+            
+            if (score > 300 && rand < 0.3) {
+                obstacleType = OBSTACLE_TYPES.BIRD;
+            } else if (rand < 0.4) {
+                obstacleType = OBSTACLE_TYPES.CACTUS_SMALL;
+            } else if (rand < 0.7) {
+                obstacleType = OBSTACLE_TYPES.CACTUS_LARGE;
+            } else {
+                obstacleType = OBSTACLE_TYPES.CACTUS_GROUP;
+            }
+
             const obstacle = {
                 x: 800,
                 y: groundY,
                 width: 20,
-                height: 40 + Math.random() * 20
+                height: 40 + Math.random() * 20,
+                type: obstacleType
             };
+
+            if (obstacleType === OBSTACLE_TYPES.BIRD) {
+                obstacle.y = groundY - 60 - Math.random() * 40;
+                obstacle.height = 20;
+                obstacle.width = 30;
+            } else if (obstacleType === OBSTACLE_TYPES.CACTUS_SMALL) {
+                obstacle.height = 30 + Math.random() * 15;
+            } else if (obstacleType === OBSTACLE_TYPES.CACTUS_GROUP) {
+                obstacle.width = 60;
+                obstacle.height = 50 + Math.random() * 20;
+            }
+
             obstacles.push(obstacle);
 
-            // 3D 장애물 생성 (3D 모드일 때만)
+            // 3D 장애물 생성
             if (is3DMode && scene) {
-                const obstacleGeometry = new THREE.BoxGeometry(0.3, obstacle.height / 50, 0.3);
-                const obstacleMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+                let obstacleGeometry, obstacleMaterial;
+                
+                if (obstacleType === OBSTACLE_TYPES.BIRD) {
+                    obstacleGeometry = new THREE.BoxGeometry(0.4, 0.2, 0.2);
+                    obstacleMaterial = new THREE.MeshPhongMaterial({ color: 0xff6b6b });
+                } else {
+                    obstacleGeometry = new THREE.BoxGeometry(0.3, obstacle.height / 50, 0.3);
+                    obstacleMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+                }
+                
                 const obstacle3D = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
-                obstacle3D.position.set(obstacle.x / 50 - 4, -2 + obstacle.height / 100, 0);
+                obstacle3D.position.set(obstacle.x / 50 - 4, -2 + (groundY - obstacle.y) / 50 + obstacle.height / 100, 0);
+                obstacle3D.castShadow = true;
                 obstacle3D.userData.obstacle = obstacle;
                 scene.add(obstacle3D);
                 obstacles3D.push(obstacle3D);
@@ -480,16 +663,23 @@
         function syncObstaclesTo3D() {
             if (!is3DMode || !scene) return;
             
-            // 기존 3D 장애물 제거
             obstacles3D.forEach(obj => scene.remove(obj));
             obstacles3D = [];
             
-            // 현재 장애물들을 3D로 변환
             obstacles.forEach(obstacle => {
-                const obstacleGeometry = new THREE.BoxGeometry(0.3, obstacle.height / 50, 0.3);
-                const obstacleMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+                let obstacleGeometry, obstacleMaterial;
+                
+                if (obstacle.type === OBSTACLE_TYPES.BIRD) {
+                    obstacleGeometry = new THREE.BoxGeometry(0.4, 0.2, 0.2);
+                    obstacleMaterial = new THREE.MeshPhongMaterial({ color: 0xff6b6b });
+                } else {
+                    obstacleGeometry = new THREE.BoxGeometry(0.3, obstacle.height / 50, 0.3);
+                    obstacleMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+                }
+                
                 const obstacle3D = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
-                obstacle3D.position.set(obstacle.x / 50 - 4, -2 + obstacle.height / 100, 0);
+                obstacle3D.position.set(obstacle.x / 50 - 4, -2 + (groundY - obstacle.y) / 50 + obstacle.height / 100, 0);
+                obstacle3D.castShadow = true;
                 obstacle3D.userData.obstacle = obstacle;
                 scene.add(obstacle3D);
                 obstacles3D.push(obstacle3D);
@@ -498,12 +688,13 @@
 
         // 구름 생성
         function createCloud() {
-            if (Math.random() > 0.01) return;
+            if (Math.random() > 0.008) return;
             clouds.push({
                 x: 800,
                 y: 50 + Math.random() * 100,
                 width: 60 + Math.random() * 40,
-                height: 30
+                height: 30,
+                speed: 0.3 + Math.random() * 0.2
             });
         }
 
@@ -519,63 +710,169 @@
         function gameOver() {
             isGameOver = true;
             document.getElementById('finalScore').textContent = Math.floor(score);
+            document.getElementById('finalHighScore').textContent = highScore;
             document.getElementById('gameOver').style.display = 'block';
             cancelAnimationFrame(animationId);
             stopBGM();
+            
+            // 충돌 사운드
+            playSound(150, 0.3, 'sawtooth', 0.3);
+            
+            // 파티클 효과
+            createParticles(dinoX + dinoWidth / 2, dinoY - dinoHeight / 2, '#ff0000', 20);
+            
+            // 화면 흔들림
+            screenShake = 20;
         }
 
         // 게임 재시작
         function restartGame() {
+            // 3D 장애물 정리
+            if (scene) {
+                obstacles3D.forEach(obj => scene.remove(obj));
+            }
             startGame();
         }
 
         // 2D 렌더링
         function render2D() {
+            // 화면 흔들림
+            let shakeX = 0, shakeY = 0;
+            if (screenShake > 0) {
+                shakeX = (Math.random() - 0.5) * screenShake;
+                shakeY = (Math.random() - 0.5) * screenShake;
+                screenShake *= 0.9;
+                if (screenShake < 0.5) screenShake = 0;
+            }
+            
+            ctx.save();
+            ctx.translate(shakeX, shakeY);
+
             // 배경 지우기
             ctx.fillStyle = '#f7f7f7';
             ctx.fillRect(0, 0, 800, 400);
 
+            // 하늘 그라데이션
+            const gradient = ctx.createLinearGradient(0, 0, 0, groundY);
+            gradient.addColorStop(0, '#87ceeb');
+            gradient.addColorStop(1, '#f7f7f7');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 800, groundY);
+
             // 바닥
             ctx.fillStyle = '#535353';
             ctx.fillRect(0, groundY, 800, 400 - groundY);
+            
+            // 바닥 패턴
+            ctx.fillStyle = '#444444';
+            for (let i = 0; i < 800; i += 40) {
+                ctx.fillRect(i - (speed * dinoAnimationSpeed) % 40, groundY, 20, 2);
+            }
 
             // 구름
             ctx.fillStyle = '#ffffff';
             clouds.forEach(cloud => {
                 ctx.fillRect(cloud.x, cloud.y, cloud.width, cloud.height);
                 ctx.fillRect(cloud.x + 10, cloud.y - 5, cloud.width - 20, cloud.height);
+                ctx.fillRect(cloud.x + 20, cloud.y - 10, cloud.width - 40, cloud.height / 2);
             });
 
-            // 장애물 (선인장)
-            ctx.fillStyle = '#00ff00';
+            // 장애물 렌더링
             obstacles.forEach(obstacle => {
-                ctx.fillRect(obstacle.x, obstacle.y - obstacle.height, obstacle.width, obstacle.height);
-                // 선인장 가지
-                ctx.fillRect(obstacle.x - 5, obstacle.y - obstacle.height + 10, 10, 5);
-                ctx.fillRect(obstacle.x + obstacle.width - 5, obstacle.y - obstacle.height + 20, 10, 5);
+                if (obstacle.type === OBSTACLE_TYPES.BIRD) {
+                    // 새 렌더링
+                    ctx.fillStyle = '#ff6b6b';
+                    ctx.fillRect(obstacle.x, obstacle.y - obstacle.height, obstacle.width, obstacle.height);
+                    // 날개
+                    ctx.fillRect(obstacle.x - 5, obstacle.y - obstacle.height + 5, 10, 8);
+                    ctx.fillRect(obstacle.x + obstacle.width - 5, obstacle.y - obstacle.height + 5, 10, 8);
+                } else {
+                    // 선인장 렌더링
+                    ctx.fillStyle = '#00ff00';
+                    ctx.fillRect(obstacle.x, obstacle.y - obstacle.height, obstacle.width, obstacle.height);
+                    
+                    if (obstacle.type === OBSTACLE_TYPES.CACTUS_GROUP) {
+                        // 그룹 선인장
+                        ctx.fillRect(obstacle.x + 15, obstacle.y - obstacle.height, obstacle.width / 3, obstacle.height);
+                        ctx.fillRect(obstacle.x + 35, obstacle.y - obstacle.height, obstacle.width / 3, obstacle.height);
+                    }
+                    
+                    // 선인장 가지
+                    ctx.fillRect(obstacle.x - 5, obstacle.y - obstacle.height + 10, 10, 5);
+                    ctx.fillRect(obstacle.x + obstacle.width - 5, obstacle.y - obstacle.height + 20, 10, 5);
+                }
             });
 
-            // 공룡 (픽셀 스타일)
+            // 파티클 렌더링
+            particles.forEach((particle, index) => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vy += 0.3; // 중력
+                particle.life--;
+                
+                if (particle.life > 0) {
+                    const alpha = particle.life / particle.maxLife;
+                    ctx.fillStyle = particle.color;
+                    ctx.globalAlpha = alpha;
+                    ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+                    ctx.globalAlpha = 1;
+                } else {
+                    particles.splice(index, 1);
+                }
+            });
+
+            // 공룡 렌더링 (애니메이션)
+            dinoAnimationSpeed += speed * 0.1;
+            if (!isJumping) {
+                dinoFrame = Math.floor(dinoAnimationSpeed / 5) % 2;
+            }
+
             ctx.fillStyle = '#000000';
+            // 공룡 몸체
             ctx.fillRect(dinoX, dinoY - dinoHeight, dinoWidth, dinoHeight);
+            
             // 공룡 눈
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(dinoX + 10, dinoY - dinoHeight + 10, 5, 5);
             ctx.fillRect(dinoX + 25, dinoY - dinoHeight + 10, 5, 5);
-            // 공룡 다리
+            
+            // 공룡 다리 (애니메이션)
             ctx.fillStyle = '#000000';
             if (!isJumping) {
-                ctx.fillRect(dinoX + 5, dinoY, 8, 5);
-                ctx.fillRect(dinoX + 27, dinoY, 8, 5);
+                const legOffset = dinoFrame * 3;
+                ctx.fillRect(dinoX + 5 + legOffset, dinoY, 8, 5);
+                ctx.fillRect(dinoX + 27 - legOffset, dinoY, 8, 5);
+            } else {
+                // 점프 중 다리
+                ctx.fillRect(dinoX + 8, dinoY, 6, 3);
+                ctx.fillRect(dinoX + 26, dinoY, 6, 3);
             }
+
+            ctx.restore();
         }
 
-            // 3D 렌더링
+        // 3D 렌더링
         function render3D() {
             if (!scene || !renderer) return;
             
+            // 화면 흔들림
+            if (screenShake > 0) {
+                camera.position.x = (Math.random() - 0.5) * screenShake * 0.1;
+                camera.position.y = 5 + (Math.random() - 0.5) * screenShake * 0.1;
+                screenShake *= 0.9;
+                if (screenShake < 0.5) {
+                    screenShake = 0;
+                    camera.position.set(0, 5, 10);
+                }
+            }
+            
             // 공룡 위치 업데이트
             dino3D.position.y = -2 + (groundY - dinoY) / 50;
+            
+            // 공룡 회전 애니메이션
+            if (!isJumping) {
+                dino3D.rotation.y = Math.sin(dinoAnimationSpeed * 0.1) * 0.1;
+            }
 
             // 장애물 업데이트
             obstacles3D.forEach((obstacle3D, index) => {
@@ -583,6 +880,11 @@
                 if (obstacle) {
                     obstacle.x -= speed;
                     obstacle3D.position.x = obstacle.x / 50 - 4;
+                    
+                    // 새 날개 애니메이션
+                    if (obstacle.type === OBSTACLE_TYPES.BIRD) {
+                        obstacle3D.rotation.y = Math.sin(obstacle.x * 0.1) * 0.3;
+                    }
 
                     if (obstacle.x < -50) {
                         scene.remove(obstacle3D);
@@ -595,6 +897,9 @@
                 }
             });
 
+            // 카메라 애니메이션
+            camera.position.z = 10 + Math.sin(Date.now() * 0.001) * 0.5;
+
             renderer.render(scene, camera);
         }
 
@@ -603,7 +908,7 @@
             if (isPaused || isGameOver) return;
 
             // 점수 증가
-            score += 0.1;
+            score += 0.1 * (speed / baseSpeed);
             document.getElementById('score').textContent = Math.floor(score);
             if (score > highScore) {
                 highScore = Math.floor(score);
@@ -611,8 +916,22 @@
             }
 
             // 속도 증가
-            speed = 5 + Math.floor(score / 100) * 0.5;
-            obstacleInterval = Math.max(1000, 2000 - Math.floor(score / 50) * 50);
+            const speedLevel = Math.floor(score / 100);
+            speed = baseSpeed + speedLevel * 0.5;
+            document.getElementById('speed').textContent = Math.floor(speed);
+            
+            // 속도 레벨 변경 시 효과
+            if (speedLevel > lastSpeedLevel) {
+                lastSpeedLevel = speedLevel;
+                const speedIndicator = document.getElementById('speedIndicator');
+                speedIndicator.style.display = 'block';
+                setTimeout(() => {
+                    speedIndicator.style.display = 'none';
+                }, 2000);
+                playSound(600, 0.2, 'sine', 0.2);
+            }
+            
+            obstacleInterval = Math.max(800, 2000 - Math.floor(score / 50) * 50);
 
             // 공룡 물리
             if (isJumping) {
@@ -644,7 +963,6 @@
                 obstacles3D.forEach((obstacle3D, index) => {
                     const obstacle = obstacle3D.userData.obstacle;
                     if (obstacle) {
-                        // 3D 공간에서 충돌 감지 (2D 좌표로 변환)
                         const dino3DX = (dinoX / 50) - 4;
                         const dino3DZ = 0;
                         const obstacle3DX = obstacle3D.position.x;
@@ -655,7 +973,8 @@
                             Math.pow(dino3DZ - obstacle3DZ, 2)
                         );
                         
-                        if (distance < 0.6 && dino3D.position.y < obstacle3D.position.y + 0.3) {
+                        const obstacleHeight = obstacle.type === OBSTACLE_TYPES.BIRD ? 0.2 : obstacle.height / 50;
+                        if (distance < 0.6 && dino3D.position.y < obstacle3D.position.y + obstacleHeight) {
                             gameOver();
                         }
                     }
@@ -664,7 +983,7 @@
 
             // 구름 이동
             clouds.forEach((cloud, index) => {
-                cloud.x -= speed * 0.5;
+                cloud.x -= speed * cloud.speed;
                 if (cloud.x < -100) {
                     clouds.splice(index, 1);
                 }
